@@ -1,0 +1,64 @@
+---
+
+name: test
+on: [pull_request]
+
+defaults:
+  run:
+    working-directory: 'mattermost'
+
+jobs:
+  check-updates-availalbe:
+    name: "Is update available?"
+    runs-on: ubuntu-latest
+    env:
+      # GitHub API endpoint for obtaining release information
+      mattermost_release_api_url: https://api.github.com/repos/mattermost/mattermost-server/releases/latest
+
+      # Where ansible role variables are stored
+      defaults_yml: defaults/main.yml
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          path: 'mattermost'
+
+      - name: "Get latest mattermost version"
+        run: |
+          export mm_latest=$(curl --silent $mattermost_release_api_url | jq -r .tag_name)
+          echo "mm_latest=$mm_latest" >> $GITHUB_ENV
+          echo "Latest mattermost: $mm_latest"
+
+      - name: "Get current mattermost version"
+        run: |
+          export mm_current=$(grep 'mm_version:' $defaults_yml | awk '{ print $2 }')
+          echo "Current mattermost: $mm_current"
+          echo "mm_current=$mm_current" >> $GITHUB_ENV
+          echo "Latest mattermost: ${{ env.mm_latest }}"
+
+      - name: "Check if we're on the latest version"
+        run: |
+          if [ "${{ env.mm_current }}" = "${{ env.mm_latest }}" ]
+          then
+                echo "No update available"
+          else
+                echo "Update available"
+          fi
+          echo "  current: ${{ env.mm_current }}"
+          echo "  latest:  ${{ env.mm_latest }}"
+
+      - name: "Bump mattermost version in ${{ env.defaults_yml }}"
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git checkout -b mattermost_$mm_latest
+          sed -i "s/mm_version: $mm_current/mm_version: $mm_latest/g" $defaults_yml
+          git diff
+          git add $defaults_yml
+          git config user.name  pr_bot
+          git config user.email pr_bot@noreply.github.com
+          git commit -m "Bump mattermost to $mm_latest"
+          git push --set-upstream origin mattermost_$mm_latest
+          gh pr create --base master \
+                       --title 'Update mattermost to $mm_latest'\
+                       --body 'Version `$mm_latest` is available.'
