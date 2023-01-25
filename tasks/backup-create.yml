@@ -3,7 +3,7 @@
 - name: Register backup timestamp
   command: date --iso=seconds
   register: backup_timestamp
-  changed_when: False
+  changed_when: false
 
 
 - name: Have containers running for database backup
@@ -13,13 +13,15 @@
 
 - name: Create backup directory
   file:
-    path: "{{ mattermost_docker_backup_path }}/{{ backup_timestamp.stdout }}"
+    path: "{{ mm_docker_backup_path }}/{{ backup_timestamp.stdout }}"
     state: directory
-    recurse: yes
+    recurse: true
   register: backup_dir
 
 - name: Backup database
-  shell: "docker exec -t docker_postgres_1 pg_dump -U {{ mm_postgres_user }} {{ mm_postgres_db }} > {{ backup_dir.path }}/db.sql"
+  shell: >
+    docker exec -t docker_postgres_1 pg_dump -U {{ mm_postgres_user }}
+    {{ mm_postgres_db }} > {{ backup_dir.path }}/db.sql"
 
 - name: Stop containers for volume backup
   systemd:
@@ -32,7 +34,8 @@
     state: present
 
 - name: Backup volumes
-  command: "rsync -a {{ mattermost_docker_volumes_path }} {{ backup_dir.path }}"
+  command: >
+    rsync -a {{ mm_docker_volumes_path }} {{ backup_dir.path }}
 
 - name: Start containers after volume backup
   systemd:
