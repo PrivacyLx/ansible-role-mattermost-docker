@@ -4,7 +4,7 @@ Deploy [mattermost/docker](https://github.com/mattermost/docker) (team edition) 
 
 - **Based on:** https://github.com/civ0/ansible-mattermost-docker
 - **Mattermost version supported**: >= 7.2
-
+test
 Setup instructions are adapted from https://docs.mattermost.com/install/install-docker.html
 
 # Table of contents
