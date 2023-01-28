@@ -1,9 +1,9 @@
 ---
 
 name: test
-on:
-  schedule:
-    - cron: '0 0 * * *'  # Run at midnight
+on: [pull_request]
+  # schedule:
+  #   - cron: '0 0 * * *'  # Run at midnight
 
 defaults:
   run:
@@ -19,6 +19,7 @@ jobs:
 
       # Where ansible role variables are stored
       defaults_yml: defaults/main.yml
+      deploy_yml:   molecule/default/playbooks/deploy.yml
 
     steps:
       - uses: actions/checkout@v3
@@ -27,7 +28,13 @@ jobs:
 
       - name: "Get mattermost versions"
         run: |
-          mm_latest=$(curl --silent $mattermost_release_api_url | jq -r .tag_name)
+          # obtain latest version (accounting for network issues)
+          mm_latest="null"
+          while [ "$mm_latest" = "null" ]; do
+              mm_latest=$(curl --silent $mattermost_release_api_url | jq -r .tag_name)
+              sleep 1
+          done
+
           mm_latest=${mm_latest:1}  # release tags don't contain the 'v'
           echo "mm_latest=$mm_latest" >> $GITHUB_ENV
           echo "Latest mattermost: $mm_latest"
@@ -48,11 +55,17 @@ jobs:
           then
                 echo "No update available"
           else
-                echo "Update available"
+                echo "Update available - opening PR for it"
                 git checkout -b ${{ env.new_branch }}
+
+                # Update mattermost version string in code
                 sed -i "s/mm_version: \"${{ env.mm_current }}\"/mm_version: \"${{ env.mm_latest }}\"/g" ${{ env.defaults_yml }}
+
+                # Set the previous version on tests for upgrade path
+                sed -i "s/        mm_version: \".*\"/        mm_version: \"${{ env.mm_current }}\"/g" ${{ env.deploy_yml }}
+
                 git diff
-                git add ${{ env.defaults_yml }}
+                git add ${{ env.defaults_yml }} ${{ env.deploy_yml }}
                 git config user.name  pr_bot
                 git config user.email pr_bot@noreply.github.com
                 git commit -m "Bump mattermost to ${{ env.mm_latest }}"
