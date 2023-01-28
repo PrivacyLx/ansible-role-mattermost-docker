@@ -9,3 +9,7 @@
     - role: mattermost
       vars:
         mattermost_docker_install: yes
+        # previous mattermost version
+        mm_version: "6.9"
+
+- import_playbook: ./upgrade.yml
