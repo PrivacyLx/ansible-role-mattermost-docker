@@ -26,6 +26,8 @@ provisioner:
   playbooks:
     prepare: prepare.yml
     converge: ./playbooks/deploy.yml
+    upgrade: ./playbooks/upgrade.yml
+
 
 verifier:
   name: testinfra
