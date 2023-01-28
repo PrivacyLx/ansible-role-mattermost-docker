@@ -21,7 +21,7 @@
 - name: Backup database
   shell: >
     docker exec -t docker_postgres_1 pg_dump -U {{ mm_postgres_user }}
-    {{ mm_postgres_db }} > {{ backup_dir.path }}/db.sql"
+    {{ mm_postgres_db }} > {{ backup_dir.path }}/db.sql
 
 - name: Stop containers for volume backup
   systemd:
