@@ -3,7 +3,7 @@
 - name: Prepare
   hosts: all
   become: true
-  tasks:
+  pre_tasks:
     - name: Generate an OpenSSH keypair with the default values (4096 bits, rsa)
       openssh_keypair:
         path: /tmp/id_ssh_rsa
@@ -23,3 +23,11 @@
       pip:
         name: docker-compose
         state: present
+
+  # install an older version
+  roles:
+    - role: geerlingguy.docker
+    - role: mattermost
+      vars:
+        mattermost_docker_install: yes
+        mm_version: "7.5.2"
