@@ -19,8 +19,9 @@
   register: backup_dir
 
 - name: Backup database
-  shell: >
-    docker exec -t docker_postgres_1 pg_dump -U {{ mm_postgres_user }}
+  shell: |
+    postgres_container=$(docker ps -aqf "name=postgres")
+    docker exec -t $postgres_container pg_dump -U {{ mm_postgres_user }} \
     {{ mm_postgres_db }} > {{ backup_dir.path }}/db.sql
 
 - name: Stop containers for volume backup
