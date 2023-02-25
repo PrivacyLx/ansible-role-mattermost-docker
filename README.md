@@ -1,4 +1,4 @@
-# ansible-role-mattermost-docker
+# ansible-role-mattermost-docker 
 
 Deploy [mattermost/docker](https://github.com/mattermost/docker) (team edition) with Ansible on an existing server.
 
