@@ -30,4 +30,4 @@
     - role: mattermost
       vars:
         mattermost_docker_install: yes
-        mm_version: "7.7"
+        mm_version: "7.8.0"
